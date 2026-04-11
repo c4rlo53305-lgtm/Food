@@ -3,132 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurador Pro GL</title>
+    <title>FoodLink Reparto</title>
     <style>
-        :root { --p: #6366f1; --bg: #0f172a; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .box { border: 2px dashed #334155; border-radius: 12px; height: 300px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #070b14; position: relative; }
-        img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .btn { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn:disabled { background: #334155; opacity: 0.7; }
-        .status { margin-top: 15px; text-align: center; font-size: 13px; color: #94a3b8; min-height: 20px; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--p); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .contenedor { background: white; width: 100%; max-width: 380px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #eee; }
+        
+        /* Botón Joder (Sincronizado) */
+        .btn-azar { background: #6f42c1; color: white; border: none; width: 100%; padding: 12px; border-radius: 50px; font-weight: bold; margin-bottom: 15px; cursor: pointer; font-size: 0.85em; width: 100%; }
+        #victima { color: #fdd835; text-transform: uppercase; margin-left: 5px; }
+
+        .header-logo { background-color: #ff3333; padding: 15px; border-radius: 15px; color: white; margin-bottom: 15px; text-align: center; }
+        .logo-texto { font-size: 22px; font-weight: bold; }
+        .pantalla-dinero { font-size: 2.8em; font-weight: bold; margin: 5px 0; }
+        .fondo-txt { font-size: 0.85em; opacity: 0.9; }
+
+        .seccion { margin-bottom: 20px; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
+        .titulo-seccion { font-size: 0.8em; font-weight: bold; color: #888; margin-bottom: 8px; text-transform: uppercase; }
+
+        input { width: 100%; padding: 12px; font-size: 1.1em; border: 2px solid #eaedf0; border-radius: 12px; margin-bottom: 8px; box-sizing: border-box; text-align: center; outline: none; }
+        
+        .btn { display: block; width: 100%; padding: 12px; border-radius: 12px; border: none; font-size: 0.95em; font-weight: 600; color: white; cursor: pointer; margin-top: 5px; }
+        .bg-ingresos { border-left: 5px solid #47c96d; background: #f6fff9; }
+        .bg-gastos { border-left: 5px solid #ff5e5e; background: #fff6f6; }
+        
+        .btn-verde { background: #47c96d; }
+        .btn-rojo { background: #ff5e5e; }
+        .btn-azul { background: #4a90e2; }
+        .btn-negro { background: #333; width: 100%; margin-top: 10px; }
+        .btn-reiniciar { background: none; border: 1px solid #ccc; color: #999; width: 100%; margin-top: 25px; font-size: 0.75em; padding: 8px; border-radius: 10px; cursor: pointer; }
+
+        #historial { text-align: left; margin-top: 15px; font-size: 0.85em; max-height: 120px; overflow-y: auto; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+        #modalMemoria { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; color: white; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        .dia-registro { background: #333; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #47c96d; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="text-align:center; margin-top:0;">✨ Restaurador GL</h2>
-    
-    <div class="box" onclick="document.getElementById('fileIn').click()">
-        <img id="imgOri" style="display:none">
-        <p id="t1">Toca para subir imagen</p>
-        <input type="file" id="fileIn" hidden accept="image/*">
+<div class="contenedor">
+    <button class="btn-azar" onclick="mostrarVictima()">
+        Hoy hay que joder a: <span id="victima">¿Quién toca?</span>
+    </button>
+
+    <div class="header-logo">
+        <div class="logo-texto">FoodLink <small style="font-size: 10px;">GL</small></div>
+        <div class="pantalla-dinero" id="display">$0.00</div>
+        <div class="fondo-txt">Mi Fondo: <span id="txtFondo">$0.00</span></div>
     </div>
 
-    <div class="box">
-        <img id="imgRes" style="display:none">
-        <p id="t2">Resultado IA</p>
+    <div class="seccion bg-ingresos">
+        <div class="titulo-seccion" id="labelIngreso">Paso 1: Dinero Inicial</div>
+        <input type="number" id="montoIngreso" placeholder="Escribe tu fondo" inputmode="decimal">
+        <button class="btn btn-azul" id="btnFondo" onclick="setFondo()">FIJAR FONDO</button>
+        <div id="controlesIngreso" style="display:none; gap: 5px; width: 100%;">
+            <button class="btn btn-verde" style="flex:2" onclick="registrarIngreso('PEDIDO')">PEDIDO</button>
+            <button class="btn btn-azul" style="flex:1" onclick="registrarIngreso('PROPINA')">PROPINA</button>
+        </div>
     </div>
 
-    <button id="goBtn" class="btn">RESTAURAR AHORA</button>
-    <div id="statusTxt" class="status">Listo</div>
+    <div class="seccion bg-gastos">
+        <div class="titulo-seccion">Egresos</div>
+        <input type="number" id="montoGasto" placeholder="$ Cantidad" inputmode="decimal" style="margin-bottom: 5px;">
+        <input type="text" id="conceptoGasto" placeholder="Gasolina, comida, etc...">
+        <button class="btn btn-rojo" onclick="registrarGasto()">REGISTRAR GASTO</button>
+    </div>
+
+    <div id="historial">
+        <b>Movimientos:</b>
+        <div id="log"></div>
+    </div>
+
+    <button class="btn btn-negro" onclick="verMemoria()">📂 CORTE HISTÓRICO</button>
+    <button class="btn-reiniciar" onclick="reiniciarTurno()">Reiniciar Pantalla (Mantiene Historial)</button>
+</div>
+
+<div id="modalMemoria">
+    <h2 style="color: #47c96d;">Resumen Diario</h2>
+    <div id="listaDias"></div>
+    <button class="btn btn-rojo" onclick="document.getElementById('modalMemoria').style.display='none'">CERRAR</button>
 </div>
 
 <script>
-    const KEY = "sk-cIrFsDjUshHs2sbzTty5ztSfvs6UIEcIS6Dy9sqCHTjqMbRb";
+    let f = 0, g = 0, c = 0;
+    const listaGente = ["Warache", "Pickles", "Alicia", "Jocsan", "Yovani", "Moi", "Jesús", "Josué"];
 
-    const fileIn = document.getElementById('fileIn');
-    const imgOri = document.getElementById('imgOri');
-    const imgRes = document.getElementById('imgRes');
-    const goBtn = document.getElementById('goBtn');
-    const statusTxt = document.getElementById('statusTxt');
-
-    fileIn.onchange = e => {
-        if (!e.target.files[0]) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            imgOri.src = reader.result;
-            imgOri.style.display = "block";
-            document.getElementById('t1').style.display = "none";
-            imgRes.style.display = "none";
-            document.getElementById('t2').style.display = "block";
-            statusTxt.innerText = "Imagen cargada.";
-        };
-        reader.readAsDataURL(e.target.files[0]);
+    window.onload = function() {
+        cargarMovimientosHoy();
+        calcularVictimaDelDia();
     };
 
-    async function processImage(imgElement) {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            let width = imgElement.naturalWidth;
-            let height = imgElement.naturalHeight;
-            const maxSide = 1024;
-
-            if (width > height) {
-                if (width > maxSide) {
-                    height *= maxSide / width;
-                    width = maxSide;
-                }
-            } else {
-                if (height > maxSide) {
-                    width *= maxSide / height;
-                    height = maxSide;
-                }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(imgElement, 0, 0, width, height);
-            canvas.toBlob(blob => resolve(blob), 'image/png');
-        });
+    // LÓGICA DE SINCRONIZACIÓN: Usa la fecha como semilla
+    function calcularVictimaDelDia() {
+        const hoy = new Date();
+        // Creamos un número único basado en Año, Mes y Día
+        const semilla = hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
+        
+        // Función pseudo-aleatoria simple que siempre da el mismo resultado con la misma semilla
+        const x = Math.sin(semilla) * 10000;
+        const indice = Math.floor((x - Math.floor(x)) * listaGente.length);
+        
+        return listaGente[indice];
     }
 
-    goBtn.onclick = async () => {
-        if(!imgOri.src) return alert("Sube una foto first");
-        
-        goBtn.disabled = true;
-        statusTxt.innerHTML = '<div class="loader"></div> Reparando grietas...';
+    function mostrarVictima() {
+        const nombre = calcularVictimaDelDia();
+        document.getElementById('victima').innerText = nombre;
+        alert("¡No wey! Hoy toca joder todo el día a " + nombre);
+    }
 
-        try {
-            const imageBlob = await processImage(imgOri);
-            const formData = new FormData();
-            formData.append("image", imageBlob);
-            formData.append("output_format", "webp");
-            
-            // INSTRUCCIONES ESPECÍFICAS PARA REPARAR FOTO ANTIGUA
-            formData.append("prompt", "remove scratches remove cracks restore old photo clean face sharp details");
+    function setFondo() {
+        const val = document.getElementById('montoIngreso').value;
+        if (val === "") { alert("Escribe tu fondo"); return; }
+        f = parseFloat(val);
+        actualizarUI();
+        document.getElementById('montoIngreso').value = "";
+    }
 
-            // CAMBIAMOS AL MOTOR DE IN-PAINTING/CREATIVE
-            const response = await fetch("https://api.stability.ai/v2beta/stable-image/edit/inpaint", {
-                method: "POST",
-                headers: { 
-                    "Authorization": `Bearer ${KEY}`,
-                    "Accept": "image/*" 
-                },
-                body: formData
-            });
+    function registrarIngreso(tipo) {
+        const val = document.getElementById('montoIngreso').value;
+        if (val === "") { alert("Escribe el monto"); return; }
+        const v = parseFloat(val);
+        let label = tipo;
+        if (tipo === 'PEDIDO') { c++; label = "Pedido #" + c; }
+        g += v;
+        guardarYLog(label, v);
+        document.getElementById('montoIngreso').value = "";
+        actualizarUI();
+    }
 
-            if (response.status === 402) throw new Error("Sin créditos.");
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.errors ? errorData.errors[0] : "Reintenta en 5 segundos");
-            }
+    function registrarGasto() {
+        const val = document.getElementById('montoGasto').value;
+        const concepto = document.getElementById('conceptoGasto').value || "Gasto";
+        if (val === "") { alert("Escribe el monto del gasto"); return; }
+        const v = parseFloat(val);
+        g -= v;
+        guardarYLog("GASTO", -v, concepto);
+        document.getElementById('montoGasto').value = "";
+        document.getElementById('conceptoGasto').value = "";
+        actualizarUI();
+    }
 
-            const resBlob = await response.blob();
-            imgRes.src = URL.createObjectURL(resBlob);
-            imgRes.style.display = "block";
-            document.getElementById('t2').style.display = "none";
-            statusTxt.innerText = "✅ ¡Restauración Real Completa!";
+    function actualizarUI() {
+        document.getElementById('display').innerText = "$" + (f + g).toFixed(2);
+        document.getElementById('txtFondo').innerText = "$" + f.toFixed(2);
+        const btnF = document.getElementById('btnFondo');
+        const ctrlI = document.getElementById('controlesIngreso');
+        const lbl = document.getElementById('labelIngreso');
+        const inp = document.getElementById('montoIngreso');
 
-        } catch (e) {
-            statusTxt.innerText = "❌ " + e.message;
-        } finally {
-            goBtn.disabled = false;
+        if (f !== 0) {
+            btnF.style.display = 'none';
+            ctrlI.style.display = 'flex';
+            lbl.innerText = "Ganancias (Pedido #" + (c + 1) + ")";
+            inp.placeholder = "Monto ganado";
+        } else {
+            btnF.style.display = 'block';
+            ctrlI.style.display = 'none';
+            lbl.innerText = "Paso 1: Dinero Inicial";
+            inp.placeholder = "Escribe tu fondo";
         }
-    };
+    }
+
+    function guardarYLog(tipo, valor, extra = "") {
+        const hoy = new Date().toLocaleDateString("es-MX");
+        let datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
+        datos.push({ fecha: hoy, tipo: tipo, monto: valor, concepto: extra });
+        localStorage.setItem('memoriaFoodLink', JSON.stringify(datos));
+        
+        let n = document.createElement('div');
+        n.innerText = `• ${tipo}${extra ? ': '+extra : ''} | $${valor.toFixed(2)}`;
+        document.getElementById('log').prepend(n);
+    }
+
+    function cargarMovimientosHoy() {
+        const datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
+        const hoy = new Date().toLocaleDateString("es-MX");
+        const log = document.getElementById('log');
+        log.innerHTML = "";
+        g = 0; c = 0;
+        
+        datos.filter(d => d.fecha === hoy).forEach(d => {
+            g += d.monto;
+            if (d.tipo.includes("Pedido")) c++;
+            let n = document.createElement('div');
+            n.innerText = `• ${d.tipo}${d.concepto ? ': '+d.concepto : ''} | $${d.monto.toFixed(2)}`;
+            log.prepend(n);
+        });
+        actualizarUI();
+        // Mostrar nombre en el botón al cargar
+        document.getElementById('victima').innerText = calcularVictimaDelDia();
+    }
+
+    function reiniciarTurno() {
+        if(confirm("¿Limpiar pantalla? El historial acumulado no se borrará.")) {
+            f = 0; g = 0; c = 0;
+            document.getElementById('log').innerHTML = "";
+            actualizarUI();
+        }
+    }
+
+    function verMemoria() {
+        const datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
+        const lista = document.getElementById('listaDias');
+        lista.innerHTML = "";
+        const resumen = {};
+        datos.forEach(d => {
+            resumen[d.fecha] = (resumen[d.fecha] || 0) + d.monto;
+        });
+        Object.keys(resumen).reverse().forEach(fecha => {
+            lista.innerHTML += `<div class="dia-registro"><b>${fecha}</b><br><span style="color:#47c96d">$${resumen[fecha].toFixed(2)}</span></div>`;
+        });
+        document.getElementById('modalMemoria').style.display = 'block';
+    }
 </script>
+
 </body>
 </html>
