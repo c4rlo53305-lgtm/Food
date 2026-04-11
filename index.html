@@ -52,22 +52,45 @@
             imgOri.src = reader.result;
             imgOri.style.display = "block";
             document.getElementById('t1').style.display = "none";
+            statusTxt.innerText = "Imagen cargada.";
         };
         reader.readAsDataURL(e.target.files[0]);
     };
 
+    // Función para redimensionar la imagen antes de enviarla
+    async function resizeImage(imgElement) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxPixels = 1000000;
+            let width = imgElement.naturalWidth;
+            let height = imgElement.naturalHeight;
+            const currentPixels = width * height;
+
+            if (currentPixels > maxPixels) {
+                const ratio = Math.sqrt(maxPixels / currentPixels);
+                width = Math.floor(width * ratio);
+                height = Math.floor(height * ratio);
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(imgElement, 0, 0, width, height);
+            canvas.toBlob(blob => resolve(blob), 'image/webp', 0.9);
+        });
+    }
+
     goBtn.onclick = async () => {
         if(!imgOri.src) return alert("Sube una foto");
         goBtn.disabled = true;
-        statusTxt.innerHTML = '<div class="loader"></div> Conectando...';
+        statusTxt.innerHTML = '<div class="loader"></div> Optimizando y enviando...';
 
         try {
-            const blob = await (await fetch(imgOri.src)).blob();
+            const blob = await resizeImage(imgOri);
             const formData = new FormData();
             formData.append("image", blob);
             formData.append("output_format", "webp");
 
-            // Usamos un PROXY para saltar el bloqueo del navegador
             const res = await fetch("https://api.stability.ai/v2beta/stable-image/upscale/fast", {
                 method: "POST",
                 headers: { 
@@ -77,14 +100,14 @@
                 body: formData
             });
 
-            if (res.status === 402) throw new Error("Sin créditos en Stability AI");
-            if (!res.ok) throw new Error("Error de conexión. Intenta de nuevo.");
+            if (res.status === 402) throw new Error("Sin créditos.");
+            if (!res.ok) throw new Error("Error en el servidor.");
 
             const resBlob = await res.blob();
             imgRes.src = URL.createObjectURL(resBlob);
             imgRes.style.display = "block";
             document.getElementById('t2').style.display = "none";
-            statusTxt.innerText = "✅ ¡Listo!";
+            statusTxt.innerText = "✅ ¡Restauración exitosa!";
         } catch (e) {
             statusTxt.innerText = "❌ " + e.message;
         } finally {
