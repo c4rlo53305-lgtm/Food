@@ -3,215 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodLink Reparto</title>
+    <title>FoodLink Reparto - Seguro</title>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; display: flex; justify-content: center; }
         .contenedor { background: white; width: 100%; max-width: 380px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #eee; }
         
-        .btn-azar { background: #6f42c1; color: white; border: none; width: 100%; padding: 12px; border-radius: 50px; font-weight: bold; margin-bottom: 15px; cursor: pointer; font-size: 0.85em; width: 100%; }
-        #victima { color: #fdd835; text-transform: uppercase; margin-left: 5px; }
+        .online-box { text-align: center; font-size: 0.75em; color: #47c96d; font-weight: bold; margin-bottom: 10px; background: #e8f5e9; padding: 8px; border-radius: 12px; }
+        .dot { height: 8px; width: 8px; background-color: #47c96d; border-radius: 50%; display: inline-block; margin-right: 4px; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .btn-azar { background: #6f42c1; color: white; border: none; width: 100%; padding: 12px; border-radius: 50px; font-weight: bold; margin-bottom: 15px; cursor: pointer; font-size: 0.85em; }
+        #victima { color: #fdd835; text-transform: uppercase; }
 
         .header-logo { background-color: #ff3333; padding: 15px; border-radius: 15px; color: white; margin-bottom: 15px; text-align: center; }
-        .logo-texto { font-size: 22px; font-weight: bold; }
         .pantalla-dinero { font-size: 2.8em; font-weight: bold; margin: 5px 0; }
-        .fondo-txt { font-size: 0.85em; opacity: 0.9; }
-
-        .seccion { margin-bottom: 20px; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
-        .titulo-seccion { font-size: 0.8em; font-weight: bold; color: #888; margin-bottom: 8px; text-transform: uppercase; }
-
-        input { width: 100%; padding: 12px; font-size: 1.1em; border: 2px solid #eaedf0; border-radius: 12px; margin-bottom: 8px; box-sizing: border-box; text-align: center; outline: none; }
         
-        .btn { display: block; width: 100%; padding: 12px; border-radius: 12px; border: none; font-size: 0.95em; font-weight: 600; color: white; cursor: pointer; margin-top: 5px; }
+        .seccion { margin-bottom: 15px; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
         .bg-ingresos { border-left: 5px solid #47c96d; background: #f6fff9; }
         .bg-gastos { border-left: 5px solid #ff5e5e; background: #fff6f6; }
-        
+
+        input { width: 100%; padding: 12px; font-size: 1em; border: 2px solid #eaedf0; border-radius: 12px; margin-bottom: 8px; box-sizing: border-box; text-align: center; outline: none; }
+        .btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; margin-top: 5px; }
         .btn-verde { background: #47c96d; }
         .btn-rojo { background: #ff5e5e; }
         .btn-azul { background: #4a90e2; }
-        .btn-negro { background: #333; width: 100%; margin-top: 10px; }
-        .btn-reiniciar { background: none; border: 1px solid #ccc; color: #999; width: 100%; margin-top: 25px; font-size: 0.75em; padding: 8px; border-radius: 10px; cursor: pointer; }
+        .btn-negro { background: #333; margin-top: 10px; }
 
-        #historial { text-align: left; margin-top: 15px; font-size: 0.85em; max-height: 120px; overflow-y: auto; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
-        #modalMemoria { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; color: white; padding: 25px; box-sizing: border-box; overflow-y: auto; }
-        .dia-registro { background: #333; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #47c96d; }
+        #log { font-size: 0.8em; color: #666; max-height: 120px; overflow-y: auto; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .footer-btns { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
+        .btn-borrar-turno { background: #fee; color: #f44; border: 1px solid #fcc; font-size: 0.7em; padding: 8px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="contenedor">
-    <button class="btn-azar" onclick="mostrarVictima()">
-        Hoy hay que joder a: <span id="victima">¿Quién toca?</span>
+    <div class="online-box">
+        <span class="dot"></span> <span id="user-count">...</span> Repas en línea
+    </div>
+    
+    <button class="btn-azar" onclick="alert('Hoy la víctima es: ' + document.getElementById('victima').innerText)">
+        Hoy toca joder a: <span id="victima">...</span>
     </button>
 
     <div class="header-logo">
-        <div class="logo-texto">FoodLink <small style="font-size: 10px;">GL</small></div>
+        <div style="font-weight: bold;">FoodLink Reparto</div>
         <div class="pantalla-dinero" id="display">$0.00</div>
-        <div class="fondo-txt">Mi Fondo: <span id="txtFondo">$0.00</span></div>
+        <div style="font-size: 0.8em;">Fondo Guardado: <span id="txtFondo">$0.00</span></div>
     </div>
 
     <div class="seccion bg-ingresos">
-        <div class="titulo-seccion" id="labelIngreso">Paso 1: Dinero Inicial</div>
-        <input type="number" id="montoIngreso" placeholder="Escribe tu fondo" inputmode="decimal">
-        <button class="btn btn-azul" id="btnFondo" onclick="setFondo()">FIJAR FONDO</button>
-        <div id="controlesIngreso" style="display:none; gap: 5px; width: 100%;">
-            <button class="btn btn-verde" style="flex:2" onclick="registrarIngreso('PEDIDO')">PEDIDO</button>
-            <button class="btn btn-azul" style="flex:1" onclick="registrarIngreso('PROPINA')">PROPINA</button>
+        <input type="number" id="montoIngreso" placeholder="Monto" inputmode="decimal">
+        <button class="btn btn-azul" id="btnFondo" onclick="setFondo()">FIJAR FONDO INICIAL</button>
+        <div id="controlesIngreso" style="display:none; gap: 5px;">
+            <button class="btn btn-verde" style="flex:2" onclick="registrar('PEDIDO')">PEDIDO</button>
+            <button class="btn btn-azul" style="flex:1" onclick="registrar('PROPINA')">PROPINA</button>
         </div>
     </div>
 
     <div class="seccion bg-gastos">
-        <div class="titulo-seccion">Egresos</div>
-        <input type="number" id="montoGasto" placeholder="$ Cantidad" inputmode="decimal" style="margin-bottom: 5px;">
-        <input type="text" id="conceptoGasto" placeholder="Gasolina, comida, etc...">
+        <input type="number" id="montoGasto" placeholder="$" inputmode="decimal">
+        <input type="text" id="conceptoGasto" placeholder="¿En qué se gastó?">
         <button class="btn btn-rojo" onclick="registrarGasto()">REGISTRAR GASTO</button>
     </div>
 
-    <div id="historial">
-        <b>Movimientos:</b>
-        <div id="log"></div>
+    <div id="log"></div>
+
+    <div class="footer-btns">
+        <button class="btn btn-negro" onclick="verHistorial()">📂 CORTE HISTÓRICO</button>
+        <button class="btn-borrar-turno" style="margin-top: 10px;" onclick="borrarTurnoHoy()">🗑️ BORRAR DATOS DE HOY</button>
     </div>
-
-    <button class="btn btn-negro" onclick="verMemoria()">📂 CORTE HISTÓRICO</button>
-    <button class="btn-reiniciar" onclick="reiniciarTurno()">Reiniciar Pantalla (Mantiene Historial)</button>
-</div>
-
-<div id="modalMemoria">
-    <h2 style="color: #47c96d;">Resumen Diario</h2>
-    <div id="listaDias"></div>
-    <button class="btn btn-rojo" onclick="document.getElementById('modalMemoria').style.display='none'">CERRAR</button>
 </div>
 
 <script>
     let f = 0, g = 0, c = 0;
     const listaGente = ["Warache", "Pickles", "Alicia", "Jocsan", "Yovani", "Moi", "Jesús", "Josué"];
+    
+    const pubnub = new PubNub({
+        publishKey: 'pub-c-461327f3-d56d-473f-9118-2831c810620c',
+        subscribeKey: 'sub-c-132be024-db09-11eb-98a4-06797a7d4206',
+        uuid: 'repa_' + Math.floor(Math.random() * 9999)
+    });
 
-    window.onload = function() {
-        cargarMovimientosHoy();
-        document.getElementById('victima').innerText = calcularVictimaDelDia();
-    };
+    window.onload = () => {
+        // Apodo
+        if (!localStorage.getItem('miApodo')) {
+            let n = prompt("¿Cuál es tu apodo?");
+            localStorage.setItem('miApodo', n || "Repa");
+        }
 
-    function calcularVictimaDelDia() {
+        // Víctima
         const hoy = new Date();
         const semilla = hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
-        const x = Math.sin(semilla) * 10000;
-        const indice = Math.floor((x - Math.floor(x)) * listaGente.length);
-        return listaGente[indice];
+        document.getElementById('victima').innerText = listaGente[Math.floor((Math.abs(Math.sin(semilla)) * 10000) % listaGente.length)];
+        
+        cargarTodo();
+        iniciarPresencia();
+    };
+
+    function iniciarPresencia() {
+        pubnub.subscribe({ channels: ['presencia_foodlink'], withPresence: true });
+        pubnub.addListener({ presence: (p) => document.getElementById('user-count').innerText = p.occupancy });
+        pubnub.hereNow({ channels: ['presencia_foodlink'] }, (s, r) => document.getElementById('user-count').innerText = r.totalOccupancy);
     }
 
-    function mostrarVictima() {
-        alert("¡No wey! Hoy toca joder todo el día a " + calcularVictimaDelDia());
-    }
-
+    // --- LÓGICA DE PERSISTENCIA ---
     function setFondo() {
-        const val = document.getElementById('montoIngreso').value;
-        if (val === "") { alert("Escribe tu fondo"); return; }
-        f = parseFloat(val);
-        // Guardamos el fondo en una llave especial de "sesión actual"
-        localStorage.setItem('fondoActual', f);
-        actualizarUI();
+        let val = parseFloat(document.getElementById('montoIngreso').value);
+        if (isNaN(val)) return;
+        f = val;
+        localStorage.setItem('fondo_persistente', f);
         document.getElementById('montoIngreso').value = "";
+        actualizarUI();
     }
 
-    function registrarIngreso(tipo) {
-        const val = document.getElementById('montoIngreso').value;
-        if (val === "") { alert("Escribe el monto"); return; }
-        const v = parseFloat(val);
-        let label = tipo;
-        if (tipo === 'PEDIDO') { c++; label = "Pedido #" + c; }
+    function registrar(t) {
+        let v = parseFloat(document.getElementById('montoIngreso').value) || 0;
+        if(t === 'PEDIDO') c++;
         g += v;
-        guardarYLog(label, v);
+        guardarMovimiento(t === 'PEDIDO' ? 'Pedido #'+c : t, v);
         document.getElementById('montoIngreso').value = "";
         actualizarUI();
     }
 
     function registrarGasto() {
-        const val = document.getElementById('montoGasto').value;
-        const concepto = document.getElementById('conceptoGasto').value || "Gasto";
-        if (val === "") { alert("Escribe el monto del gasto"); return; }
-        const v = parseFloat(val);
+        let v = parseFloat(document.getElementById('montoGasto').value) || 0;
+        let con = document.getElementById('conceptoGasto').value || "Gasto";
         g -= v;
-        guardarYLog("GASTO", -v, concepto);
+        guardarMovimiento("GASTO", -v, con);
         document.getElementById('montoGasto').value = "";
         document.getElementById('conceptoGasto').value = "";
         actualizarUI();
     }
 
+    function guardarMovimiento(t, v, e="") {
+        const hoy = new Date().toLocaleDateString();
+        let d = JSON.parse(localStorage.getItem('m_food')) || [];
+        d.push({f: hoy, t: t, m: v, e: e});
+        localStorage.setItem('m_food', JSON.stringify(d));
+        dibujarLog(t, v, e);
+    }
+
     function actualizarUI() {
         document.getElementById('display').innerText = "$" + (f + g).toFixed(2);
         document.getElementById('txtFondo').innerText = "$" + f.toFixed(2);
-        const btnF = document.getElementById('btnFondo');
-        const ctrlI = document.getElementById('controlesIngreso');
-        const lbl = document.getElementById('labelIngreso');
-        const inp = document.getElementById('montoIngreso');
-
-        if (f !== 0) {
-            btnF.style.display = 'none';
-            ctrlI.style.display = 'flex';
-            lbl.innerText = "Ganancias (Pedido #" + (c + 1) + ")";
-            inp.placeholder = "Monto ganado";
-        } else {
-            btnF.style.display = 'block';
-            ctrlI.style.display = 'none';
-            lbl.innerText = "Paso 1: Dinero Inicial";
-            inp.placeholder = "Escribe tu fondo";
-        }
+        const hayFondo = (f > 0);
+        document.getElementById('btnFondo').style.display = hayFondo ? 'none' : 'block';
+        document.getElementById('controlesIngreso').style.display = hayFondo ? 'flex' : 'none';
     }
 
-    function guardarYLog(tipo, valor, extra = "") {
-        const hoy = new Date().toLocaleDateString("es-MX");
-        let datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
-        datos.push({ fecha: hoy, tipo: tipo, monto: valor, concepto: extra });
-        localStorage.setItem('memoriaFoodLink', JSON.stringify(datos));
-        
-        let n = document.createElement('div');
-        n.innerText = `• ${tipo}${extra ? ': '+extra : ''} | $${valor.toFixed(2)}`;
-        document.getElementById('log').prepend(n);
-    }
-
-    function cargarMovimientosHoy() {
-        const datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
-        const hoy = new Date().toLocaleDateString("es-MX");
-        const log = document.getElementById('log');
-        log.innerHTML = "";
+    function cargarTodo() {
+        f = parseFloat(localStorage.getItem('fondo_persistente')) || 0;
+        let d = JSON.parse(localStorage.getItem('m_food')) || [];
+        let hoy = new Date().toLocaleDateString();
+        document.getElementById('log').innerHTML = "";
         g = 0; c = 0;
         
-        // Recuperar fondo guardado
-        const fondoGuardado = localStorage.getItem('fondoActual');
-        if (fondoGuardado) f = parseFloat(fondoGuardado);
-
-        datos.filter(d => d.fecha === hoy).forEach(d => {
-            g += d.monto;
-            if (d.tipo.includes("Pedido")) c++;
-            let n = document.createElement('div');
-            n.innerText = `• ${d.tipo}${d.concepto ? ': '+d.concepto : ''} | $${d.monto.toFixed(2)}`;
-            log.prepend(n);
+        d.filter(x => x.f === hoy).forEach(x => {
+            g += x.m;
+            if(x.t.includes("#")) c++;
+            dibujarLog(x.t, x.m, x.e);
         });
         actualizarUI();
     }
 
-    function reiniciarTurno() {
-        if(confirm("¿Limpiar pantalla? Esto borrará el fondo actual de la vista.")) {
-            f = 0; g = 0; c = 0;
-            localStorage.removeItem('fondoActual');
-            document.getElementById('log').innerHTML = "";
-            actualizarUI();
+    function dibujarLog(t, v, e) {
+        let n = document.createElement('div');
+        n.style.borderBottom = "1px solid #eee";
+        n.style.padding = "3px 0";
+        n.innerHTML = `<span style="color:${v<0?'#f44':'#47c96d'}">${v<0?'▼':'▲'}</span> ${t} ${e}: <b>$${Math.abs(v).toFixed(2)}</b>`;
+        document.getElementById('log').prepend(n);
+    }
+
+    function borrarTurnoHoy() {
+        if(confirm("¿Seguro que quieres borrar todos los pedidos y gastos de hoy? El Fondo y el historial de otros días NO se borrarán.")) {
+            const hoy = new Date().toLocaleDateString();
+            let d = JSON.parse(localStorage.getItem('m_food')) || [];
+            let filtrados = d.filter(x => x.f !== hoy);
+            localStorage.setItem('m_food', JSON.stringify(filtrados));
+            cargarTodo();
         }
     }
 
-    function verMemoria() {
-        const datos = JSON.parse(localStorage.getItem('memoriaFoodLink')) || [];
-        const lista = document.getElementById('listaDias');
-        lista.innerHTML = "";
-        const resumen = {};
-        datos.forEach(d => {
-            resumen[d.fecha] = (resumen[d.fecha] || 0) + d.monto;
-        });
-        Object.keys(resumen).reverse().forEach(fecha => {
-            lista.innerHTML += `<div class="dia-registro"><b>${fecha}</b><br><span style="color:#47c96d">$${resumen[fecha].toFixed(2)}</span></div>`;
-        });
-        document.getElementById('modalMemoria').style.display = 'block';
+    function verHistorial() {
+        let d = JSON.parse(localStorage.getItem('m_food')) || [];
+        let r = {};
+        d.forEach(x => r[x.f] = (r[x.f] || 0) + x.m);
+        let texto = Object.entries(r).length > 0 ? 
+            Object.entries(r).reverse().map(([k,v]) => `${k}: $${v.toFixed(2)}`).join("\n") : 
+            "No hay historial aún.";
+        alert("INGRESOS NETOS POR DÍA:\n\n" + texto);
     }
 </script>
-
 </body>
 </html>
