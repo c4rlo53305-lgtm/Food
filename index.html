@@ -8,34 +8,26 @@
         :root { --red: #ff3333; --dark: #050505; --card: #111; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--dark); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
         header { padding: 12px; background: #000; border-bottom: 2px solid var(--red); text-align: center; flex-shrink: 0; }
         .logo { font-weight: 900; font-size: 22px; } .l-r { color: var(--red); }
-
-        /* SOLUCIÓN VISUAL: Padding inferior grande para no tapar mensajes */
-        #chat-box { 
-            flex: 1; 
-            padding: 15px 15px 120px 15px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            -webkit-overflow-scrolling: touch;
-        }
-
+        #chat-box { flex: 1; padding: 15px 15px 140px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
         .ai { align-self: flex-start; background: var(--card); border-left: 4px solid var(--red); }
         .user { align-self: flex-end; background: var(--red); color: white; }
-
-        /* TABLA DE TARIFAS ESTILIZADA */
         table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; color: #eee; }
-        td { border: 1px solid #333; padding: 4px 8px; }
-        .price { color: var(--red); font-weight: bold; }
-
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 12px; background: rgba(10,10,10,0.95); backdrop-filter: blur(5px); border-top: 1px solid #222; z-index: 1000; }
-        .input-row { display: flex; gap: 8px; background: #181818; padding: 5px; border-radius: 25px; border: 1px solid #333; max-width: 600px; margin: 0 auto; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        button { background: var(--red); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 20px; flex-shrink: 0; }
+        td { border: 1px solid #333; padding: 4px 8px; } .price { color: var(--red); font-weight: bold; }
+        
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(10,10,10,0.98); border-top: 1px solid #222; z-index: 1000; }
+        .input-row { display: flex; gap: 6px; background: #181818; padding: 5px; border-radius: 30px; border: 1px solid #333; max-width: 750px; margin: 0 auto; align-items: center; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; min-width: 0; }
+        
+        .btn-action { border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0; }
+        .btn-panic { background: #ffcc00; color: black; font-size: 18px; }
+        .btn-mic { background: #333; color: white; font-size: 18px; }
+        .btn-mic.recording { background: var(--red); animation: pulse 1.5s infinite; }
+        .btn-send { background: var(--red); color: white; font-size: 20px; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(255, 51, 51, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 51, 51, 0); } 100% { box-shadow: 0 0 0 0px rgba(255, 51, 51, 0); } }
     </style>
 </head>
 <body>
@@ -43,29 +35,61 @@
 <header><div class="logo"><span class="l-r">Food</span>Link GL</div></header>
 
 <div id="chat-box">
-    <div class="msg ai">Hola. Soy la IA de FoodLink GL. ¿En qué puedo apoyarte hoy?</div>
+    <div class="msg ai">Hola. Soy la IA de FoodLink GL creada por **L.E.F.C.** ¿Qué orden ejecutamos hoy?</div>
 </div>
 
 <div class="footer">
     <div class="input-row">
-        <input type="text" id="prompt" placeholder="Escribe aquí..." autocomplete="off">
-        <button onclick="ask()">➔</button>
+        <button class="btn-action btn-panic" onclick="panicButton()" title="Pánico">🚨</button>
+        <button id="mic-btn" class="btn-action btn-mic" onclick="toggleMic()" title="Dictar">🎤</button>
+        <input type="text" id="prompt" placeholder="Escribe o habla..." autocomplete="off">
+        <button class="btn-action btn-send" onclick="ask()">➔</button>
     </div>
 </div>
 
 <script>
     const KEY = "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";
-    let memoria = [{ role: "system", content: "Eres la IA de FoodLink GL. CREADOR: L.E.F.C. FECHA: 11 Abril 2026. REGLAS: 1. Respuestas amables pero muy cortas. 2. Si preguntan quién te creó, responde: 'Fui creado por L.E.F.C.'. 3. TARIFAS: 0-2km $35, 2-4km $40, 4-6km $45, 6-7km $50, 7-8km $55, 8-9km $60, 9-11km $65, 11-13km $70, 13km+ $75. Adicionales: Lluvia/Compra +$10. Muestra las tarifas en tabla si te las piden." }];
+    let memoria = [{ role: "system", content: "Eres la IA de FoodLink GL. CREADOR: L.E.F.C. Responde de forma amable y muy corta. Tarifas: 0-2km $35... hasta 13km+ $75. Muestra tablas si mencionas tarifas." }];
 
+    // --- FUNCIÓN DE PÁNICO ---
+    function panicButton() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const msg = encodeURIComponent(`🚨 ¡EMERGENCIA FOODLINK GL! 🚨\nNecesito apoyo en mi ubicación actual:\nhttps://www.google.com/maps?q=${lat},${lon}`);
+                window.open(`https://wa.me/?text=${msg}`, '_blank');
+            }, () => {
+                alert("No se pudo obtener tu ubicación. Activa el GPS.");
+            });
+        } else {
+            alert("Tu navegador no soporta geolocalización.");
+        }
+    }
+
+    // --- LÓGICA DE VOZ ---
+    const micBtn = document.getElementById('mic-btn');
+    const promptInput = document.getElementById('prompt');
+    let recognition;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'es-MX';
+        recognition.onstart = () => { micBtn.classList.add('recording'); };
+        recognition.onend = () => { micBtn.classList.remove('recording'); };
+        recognition.onresult = (e) => { promptInput.value = e.results[0][0].transcript; ask(); };
+    }
+
+    function toggleMic() { if (recognition) recognition.start(); }
+
+    // --- CHAT ---
     async function ask() {
-        const inp = document.getElementById('prompt');
-        const txt = inp.value.trim();
+        const txt = promptInput.value.trim();
         if(!txt) return;
-
         addMsg(txt, 'user');
         memoria.push({ role: "user", content: txt });
-        inp.value = "";
-
+        promptInput.value = "";
         try {
             const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
@@ -74,15 +98,12 @@
             });
             const data = await res.json();
             let r = data.choices[0].message.content;
-            
-            // Convertir texto de tarifas en tabla si la IA las menciona
-            if(r.includes("$35") && r.includes("km")) {
-                r = r + "<table><tr><td>0-2km</td><td class='price'>$35</td></tr><tr><td>2-4km</td><td class='price'>$40</td></tr><tr><td>4-6km</td><td class='price'>$45</td></tr><tr><td>6-7km</td><td class='price'>$50</td></tr><tr><td>7-8km</td><td class='price'>$55</td></tr><tr><td>8-9km</td><td class='price'>$60</td></tr><tr><td>9-11km</td><td class='price'>$65</td></tr><tr><td>11-13km</td><td class='price'>$70</td></tr><tr><td>13km+</td><td class='price'>$75</td></tr></table>";
+            if(r.includes("$35")) {
+                r += "<table><tr><td>0-2km</td><td class='price'>$35</td></tr><tr><td>2-4km</td><td class='price'>$40</td></tr><tr><td>4-6km</td><td class='price'>$45</td></tr><tr><td>6-7km</td><td class='price'>$50</td></tr><tr><td>7-8km</td><td class='price'>$55</td></tr><tr><td>8-9km</td><td class='price'>$60</td></tr><tr><td>9-11km</td><td class='price'>$65</td></tr><tr><td>11-13km</td><td class='price'>$70</td></tr><tr><td>13km+</td><td class='price'>$75</td></tr></table>";
             }
-
             addMsg(r, 'ai');
             memoria.push({ role: "assistant", content: r });
-        } catch (e) { addMsg("Error de conexión.", 'ai'); }
+        } catch (e) { addMsg("Error.", 'ai'); }
     }
 
     function addMsg(t, c) {
@@ -91,11 +112,9 @@
         d.className = `msg ${c}`;
         d.innerHTML = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         b.appendChild(d);
-        // Autoscroll corregido
         setTimeout(() => { b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); }, 150);
     }
-
-    document.getElementById('prompt').addEventListener('keypress', e => { if(e.key === 'Enter') ask(); });
+    promptInput.addEventListener('keypress', e => { if(e.key === 'Enter') ask(); });
 </script>
 </body>
 </html>
