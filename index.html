@@ -8,57 +8,93 @@
         :root { --red: #ff3333; --dark: #050505; --card: #111; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--dark); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        header { padding: 12px; background: #000; border-bottom: 2px solid var(--red); display: flex; justify-content: center; flex-shrink: 0; }
+        
+        header { padding: 12px; background: #000; border-bottom: 2px solid var(--red); text-align: center; flex-shrink: 0; }
         .logo { font-weight: 900; font-size: 22px; } .l-r { color: var(--red); }
-        #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 110px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; }
+
+        /* SOLUCIÓN VISUAL: Padding inferior grande para no tapar mensajes */
+        #chat-box { 
+            flex: 1; 
+            padding: 15px 15px 120px 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
         .ai { align-self: flex-start; background: var(--card); border-left: 4px solid var(--red); }
-        .user { align-self: flex-end; background: var(--red); }
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 12px; background: #0c0c0c; border-top: 1px solid #222; z-index: 1000; }
+        .user { align-self: flex-end; background: var(--red); color: white; }
+
+        /* TABLA DE TARIFAS ESTILIZADA */
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; color: #eee; }
+        td { border: 1px solid #333; padding: 4px 8px; }
+        .price { color: var(--red); font-weight: bold; }
+
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 12px; background: rgba(10,10,10,0.95); backdrop-filter: blur(5px); border-top: 1px solid #222; z-index: 1000; }
         .input-row { display: flex; gap: 8px; background: #181818; padding: 5px; border-radius: 25px; border: 1px solid #333; max-width: 600px; margin: 0 auto; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; width: 100%; }
-        button { background: var(--red); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
+        button { background: var(--red); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 20px; flex-shrink: 0; }
     </style>
 </head>
 <body>
+
 <header><div class="logo"><span class="l-r">Food</span>Link GL</div></header>
-<div id="chat-box"><div class="msg ai">**Omni Pro** activa. ¿Orden?</div></div>
+
+<div id="chat-box">
+    <div class="msg ai">Hola. Soy la IA de FoodLink GL. ¿En qué puedo apoyarte hoy?</div>
+</div>
+
 <div class="footer">
     <div class="input-row">
-        <input type="text" id="prompt" placeholder="Comando..." autocomplete="off">
+        <input type="text" id="prompt" placeholder="Escribe aquí..." autocomplete="off">
         <button onclick="ask()">➔</button>
     </div>
 </div>
+
 <script>
     const KEY = "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";
-    let memoria = [{ role: "system", content: "Responde de forma EXTREMADAMENTE CORTA Y DIRECTA. Hoy es 11 de Abril 2026. Eres la IA de FoodLink GL. Tarifas: 0-2km $35... hasta 13km+ $75. Liga MX (Toluca) al día. Sin saludos largos, sin rellenos." }];
+    let memoria = [{ role: "system", content: "Eres la IA de FoodLink GL. CREADOR: L.E.F.C. FECHA: 11 Abril 2026. REGLAS: 1. Respuestas amables pero muy cortas. 2. Si preguntan quién te creó, responde: 'Fui creado por L.E.F.C.'. 3. TARIFAS: 0-2km $35, 2-4km $40, 4-6km $45, 6-7km $50, 7-8km $55, 8-9km $60, 9-11km $65, 11-13km $70, 13km+ $75. Adicionales: Lluvia/Compra +$10. Muestra las tarifas en tabla si te las piden." }];
+
     async function ask() {
         const inp = document.getElementById('prompt');
         const txt = inp.value.trim();
         if(!txt) return;
+
         addMsg(txt, 'user');
         memoria.push({ role: "user", content: txt });
         inp.value = "";
+
         try {
             const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${KEY}` },
-                body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: memoria, max_tokens: 150 })
+                body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: memoria, temperature: 0.5 })
             });
             const data = await res.json();
-            const r = data.choices[0].message.content;
+            let r = data.choices[0].message.content;
+            
+            // Convertir texto de tarifas en tabla si la IA las menciona
+            if(r.includes("$35") && r.includes("km")) {
+                r = r + "<table><tr><td>0-2km</td><td class='price'>$35</td></tr><tr><td>2-4km</td><td class='price'>$40</td></tr><tr><td>4-6km</td><td class='price'>$45</td></tr><tr><td>6-7km</td><td class='price'>$50</td></tr><tr><td>7-8km</td><td class='price'>$55</td></tr><tr><td>8-9km</td><td class='price'>$60</td></tr><tr><td>9-11km</td><td class='price'>$65</td></tr><tr><td>11-13km</td><td class='price'>$70</td></tr><tr><td>13km+</td><td class='price'>$75</td></tr></table>";
+            }
+
             addMsg(r, 'ai');
             memoria.push({ role: "assistant", content: r });
-        } catch (e) { addMsg("Error.", 'ai'); }
+        } catch (e) { addMsg("Error de conexión.", 'ai'); }
     }
+
     function addMsg(t, c) {
         const b = document.getElementById('chat-box');
         const d = document.createElement('div');
         d.className = `msg ${c}`;
         d.innerHTML = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         b.appendChild(d);
-        setTimeout(() => { b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); }, 100);
+        // Autoscroll corregido
+        setTimeout(() => { b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); }, 150);
     }
+
     document.getElementById('prompt').addEventListener('keypress', e => { if(e.key === 'Enter') ask(); });
 </script>
 </body>
