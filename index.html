@@ -3,62 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FoodLink GL - Omni AI</title>
+    <title>Omni AI - FoodLink GL</title>
     <style>
-        :root { --red: #ff3333; --dark: #070707; --card: #141414; }
+        :root { --red: #ff3333; --dark: #050505; --card: #111111; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--dark); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        header { padding: 12px; background: #111; border-bottom: 2px solid var(--red); display: flex; justify-content: center; flex-shrink: 0; }
-        .logo { font-weight: 900; font-size: 22px; } .l-r { color: var(--red); }
-        #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; }
-        .ai { align-self: flex-start; background: var(--card); border-left: 4px solid var(--red); }
-        .user { align-self: flex-end; background: var(--red); }
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 12px; background: #0c0c0c; border-top: 1px solid #222; z-index: 1000; }
-        .input-row { display: flex; gap: 10px; background: #1a1a1a; padding: 5px; border-radius: 25px; border: 1px solid #333; max-width: 600px; margin: 0 auto; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        button { background: var(--red); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { padding: 15px; background: #000; border-bottom: 2px solid var(--red); display: flex; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .logo { font-weight: 900; font-size: 24px; letter-spacing: -1px; } 
+        .l-r { color: var(--red); }
+
+        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 110px; }
+        .msg { padding: 15px; border-radius: 18px; max-width: 88%; font-size: 15px; line-height: 1.5; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ai { align-self: flex-start; background: var(--card); border-left: 5px solid var(--red); border-bottom-left-radius: 2px; }
+        .user { align-self: flex-end; background: var(--red); color: white; border-bottom-right-radius: 2px; font-weight: 500; }
+
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); border-top: 1px solid #222; z-index: 1000; }
+        .input-row { display: flex; gap: 10px; background: #181818; padding: 6px; border-radius: 30px; border: 1px solid #333; max-width: 700px; margin: 0 auto; align-items: center; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; outline: none; font-size: 16px; width: 100%; }
+        button { background: var(--red); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 22px; transition: 0.2s; }
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
+
 <header><div class="logo"><span class="l-r">Food</span>Link GL</div></header>
-<div id="chat-box"><div class="msg ai">**Omni IA 2026** lista. Conozco los resultados del Toluca y las tarifas de FoodLink GL ($35-$75). ¿Qué investigamos?</div></div>
+
+<div id="chat-box">
+    <div class="msg ai">Sistemas operativos al 100%. Inteligencia **Omni Pro** activa. ¿Qué orden ejecutamos hoy?</div>
+</div>
+
 <div class="footer">
     <div class="input-row">
-        <input type="text" id="prompt" placeholder="Tu duda aquí..." autocomplete="off">
+        <input type="text" id="prompt" placeholder="Escribe tu comando..." autocomplete="off">
         <button onclick="ask()">➔</button>
     </div>
 </div>
+
 <script>
     const KEY = "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";
-    let memoria = [{ role: "system", content: "Eres una Omni-IA superior. HOY ES 11 DE ABRIL DE 2026. Tienes acceso a información actualizada de deportes (Liga MX, Toluca), noticias y clima. Eres experto en FoodLink GL Colima. TARIFAS: 0-2km $35, 2-4km $40, 4-6km $45, 6-7km $50, 7-8km $55, 8-9km $60, 9-11km $65, 11-13km $70, 13km+ $75. Lluvia/Compra +$10. Responde siempre con datos de 2026." }];
+    let memoria = [
+        { role: "system", content: "Eres la Inteligencia Superior Omni Pro para FoodLink GL Colima. Hoy es 11 de Abril de 2026. No eres un asistente básico; eres un cerebro logístico y de marketing de élite. TARIFAS: 0-2km $35, 2-4km $40, 4-6km $45, 6-7km $50, 7-8km $55, 8-9km $60, 9-11km $65, 11-13km $70, 13km+ $75. Adicionales: Lluvia/Compra +$10. Analiza rutas, crea contenido viral y da datos exactos de la Liga MX (Toluca) y clima de Colima en tiempo real. Sé directo, brillante y audaz." }
+    ];
+
     async function ask() {
         const inp = document.getElementById('prompt');
         const txt = inp.value.trim();
         if(!txt) return;
+
         addMsg(txt, 'user');
         memoria.push({ role: "user", content: txt });
         inp.value = "";
+
         try {
             const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${KEY}` },
-                body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: memoria })
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: memoria,
+                    temperature: 0.6 // Menos alucinación, más precisión
+                })
             });
             const data = await res.json();
             const r = data.choices[0].message.content;
             addMsg(r, 'ai');
             memoria.push({ role: "assistant", content: r });
-        } catch (e) { addMsg("Error de conexión.", 'ai'); }
+            if(memoria.length > 12) memoria.splice(1, 2); 
+        } catch (e) {
+            addMsg("Falla en el enlace neuronal. Verifica conexión.", 'ai');
+        }
     }
+
     function addMsg(t, c) {
         const b = document.getElementById('chat-box');
         const d = document.createElement('div');
         d.className = `msg ${c}`;
         d.innerHTML = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         b.appendChild(d);
-        setTimeout(() => { b.scrollTop = b.scrollHeight; }, 100);
+        setTimeout(() => { b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); }, 100);
     }
+    
+    document.getElementById('prompt').addEventListener('keypress', e => { if(e.key === 'Enter') ask(); });
 </script>
+
 </body>
 </html>
