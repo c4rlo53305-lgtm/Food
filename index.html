@@ -8,7 +8,6 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; display: flex; justify-content: center; }
         .contenedor { background: white; width: 100%; max-width: 380px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #eee; }
         
-        /* Botón Joder (Sincronizado) */
         .btn-azar { background: #6f42c1; color: white; border: none; width: 100%; padding: 12px; border-radius: 50px; font-weight: bold; margin-bottom: 15px; cursor: pointer; font-size: 0.85em; width: 100%; }
         #victima { color: #fdd835; text-transform: uppercase; margin-left: 5px; }
 
@@ -88,32 +87,27 @@
 
     window.onload = function() {
         cargarMovimientosHoy();
-        calcularVictimaDelDia();
+        document.getElementById('victima').innerText = calcularVictimaDelDia();
     };
 
-    // LÓGICA DE SINCRONIZACIÓN: Usa la fecha como semilla
     function calcularVictimaDelDia() {
         const hoy = new Date();
-        // Creamos un número único basado en Año, Mes y Día
         const semilla = hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
-        
-        // Función pseudo-aleatoria simple que siempre da el mismo resultado con la misma semilla
         const x = Math.sin(semilla) * 10000;
         const indice = Math.floor((x - Math.floor(x)) * listaGente.length);
-        
         return listaGente[indice];
     }
 
     function mostrarVictima() {
-        const nombre = calcularVictimaDelDia();
-        document.getElementById('victima').innerText = nombre;
-        alert("¡No wey! Hoy toca joder todo el día a " + nombre);
+        alert("¡No wey! Hoy toca joder todo el día a " + calcularVictimaDelDia());
     }
 
     function setFondo() {
         const val = document.getElementById('montoIngreso').value;
         if (val === "") { alert("Escribe tu fondo"); return; }
         f = parseFloat(val);
+        // Guardamos el fondo en una llave especial de "sesión actual"
+        localStorage.setItem('fondoActual', f);
         actualizarUI();
         document.getElementById('montoIngreso').value = "";
     }
@@ -181,6 +175,10 @@
         log.innerHTML = "";
         g = 0; c = 0;
         
+        // Recuperar fondo guardado
+        const fondoGuardado = localStorage.getItem('fondoActual');
+        if (fondoGuardado) f = parseFloat(fondoGuardado);
+
         datos.filter(d => d.fecha === hoy).forEach(d => {
             g += d.monto;
             if (d.tipo.includes("Pedido")) c++;
@@ -189,13 +187,12 @@
             log.prepend(n);
         });
         actualizarUI();
-        // Mostrar nombre en el botón al cargar
-        document.getElementById('victima').innerText = calcularVictimaDelDia();
     }
 
     function reiniciarTurno() {
-        if(confirm("¿Limpiar pantalla? El historial acumulado no se borrará.")) {
+        if(confirm("¿Limpiar pantalla? Esto borrará el fondo actual de la vista.")) {
             f = 0; g = 0; c = 0;
+            localStorage.removeItem('fondoActual');
             document.getElementById('log').innerHTML = "";
             actualizarUI();
         }
