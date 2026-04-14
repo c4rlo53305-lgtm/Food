@@ -65,11 +65,11 @@
         </div>
         
         <div class="pantalla-dinero" id="total-pantalla">$0.00</div>
-        <div class="txt-fondo">Total Acumulado</div>
+        <div class="txt-fondo">Dinero en Bolsa</div>
         
         <div class="meta-container">
             <div class="barra-progreso" id="barra"></div>
-            <div class="txt-meta" id="txt-meta">Meta: 0%</div>
+            <div class="txt-meta" id="txt-meta">Ganancia: $0.00</div>
         </div>
     </div>
 
@@ -110,11 +110,22 @@
 
     window.onload = () => {
         if(localStorage.getItem('dark-mode') === 'true') document.body.classList.add('dark-mode');
+        
+        const hoy = new Date().toLocaleDateString('es-MX');
+        let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
+        let tieneFondoHoy = datos.some(d => d.fecha === hoy && d.desc === "FONDO INICIAL");
+
+        if (!tieneFondoHoy) {
+            let inicio = prompt("¿Con cuánto de fondo inicias?", "0");
+            let montoInicio = parseFloat(inicio);
+            if (!isNaN(montoInicio)) {
+                guardarMov("FONDO INICIAL", montoInicio);
+            }
+        }
         cargarMemoria();
     };
 
     function irAWhats() {
-        // Enlace universal que abre la App directamente en la lista de chats
         window.location.href = "https://api.whatsapp.com/send?text=";
     }
 
@@ -167,27 +178,37 @@
     function cargarMemoria() {
         let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
         const hoy = new Date().toLocaleDateString('es-MX');
-        let sumaHoy = 0; contadorPedidos = 0;
+        let sumaTotal = 0; 
+        let gananciasHoy = 0; 
+        contadorPedidos = 0;
         const logHtml = document.getElementById('log-hoy');
         logHtml.innerHTML = "";
+        
         datos.filter(d => d.fecha === hoy).forEach(d => {
-            sumaHoy += d.cantidad;
-            if (d.desc.includes("Ped #")) contadorPedidos++;
+            sumaTotal += d.cantidad;
+            // Solo sumamos a ganancias lo que sea Pedido o Propina
+            if (d.desc.includes("Ped #") || d.desc === "Propina") {
+                gananciasHoy += d.cantidad;
+                if (d.desc.includes("Ped #")) contadorPedidos++;
+            }
             let item = document.createElement('div');
             item.className = "item-log";
             item.innerHTML = `<div><b>${d.desc}</b> <span style="font-size:0.8em;color:#888">${d.hora}</span></div><b style="color:${d.cantidad < 0 ? 'red':'green'}">$${d.cantidad.toFixed(2)}</b>`;
             logHtml.prepend(item);
         });
-        movimientosTotal = sumaHoy;
-        actualizarUI();
+        
+        movimientosTotal = sumaTotal;
+        actualizarUI(gananciasHoy);
     }
 
-    function actualizarUI() {
+    function actualizarUI(gananciasHoy) {
+        // Muestra todo el dinero que traes (Fondo + Pedidos - Gastos)
         document.getElementById('total-pantalla').innerText = "$" + movimientosTotal.toFixed(2);
-        let ingresosHoy = movimientosTotal > 0 ? movimientosTotal : 0; 
-        let porcentaje = (ingresosHoy / metaDiaria) * 100;
+        
+        // La barra solo usa ganancias (Pedidos + Propinas)
+        let porcentaje = (gananciasHoy / metaDiaria) * 100;
         document.getElementById('barra').style.width = Math.min(porcentaje, 100) + "%";
-        document.getElementById('txt-meta').innerText = `Meta: ${Math.floor(porcentaje)}%`;
+        document.getElementById('txt-meta').innerText = `Ganancia: $${gananciasHoy.toFixed(2)}`;
     }
 
     function enviarAuxilio() {
@@ -201,12 +222,12 @@
         let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
         let resumen = {};
         datos.forEach(d => resumen[d.fecha] = (resumen[d.fecha] || 0) + d.cantidad);
-        let txt = "HISTORIAL:\n" + Object.keys(resumen).reverse().map(f => `${f}: $${resumen[f].toFixed(2)}`).join('\n');
+        let txt = "RESUMEN POR DÍA:\n" + Object.keys(resumen).reverse().map(f => `${f}: $${resumen[f].toFixed(2)}`).join('\n');
         alert(txt || "Sin datos");
     }
 
     function limpiarHoy() {
-        if (confirm("¿Reiniciar turno?")) {
+        if (confirm("¿Reiniciar turno? Esto borrará el fondo y los pedidos de hoy.")) {
             const hoy = new Date().toLocaleDateString('es-MX');
             let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
             localStorage.setItem('foodlink_datos', JSON.stringify(datos.filter(d => d.fecha !== hoy)));
