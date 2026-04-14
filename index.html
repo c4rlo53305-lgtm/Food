@@ -20,6 +20,7 @@
 
         .pantalla-dinero { font-size: 2.5em; font-weight: bold; margin: 5px 0; }
         .txt-fondo { font-size: 0.85em; opacity: 0.9; }
+        .txt-inicio-fijo { font-size: 0.7em; opacity: 0.8; margin-top: 2px; }
 
         .meta-container { margin-top: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; height: 16px; position: relative; overflow: hidden; }
         .barra-progreso { background: var(--verde); height: 100%; width: 0%; transition: 0.5s; }
@@ -66,6 +67,7 @@
         
         <div class="pantalla-dinero" id="total-pantalla">$0.00</div>
         <div class="txt-fondo">Dinero en Bolsa</div>
+        <div class="txt-inicio-fijo" id="fondo-inicio-html">Iniciaste con: $0.00</div>
         
         <div class="meta-container">
             <div class="barra-progreso" id="barra"></div>
@@ -106,27 +108,32 @@
 </div>
 
 <script>
-    let movimientosTotal = 0, contadorPedidos = 0, metaDiaria = 1000;
+    let movimientosTotal = 0, contadorPedidos = 0, metaDiaria = 1000, fondoInicialHoy = 0;
 
     window.onload = () => {
         if(localStorage.getItem('dark-mode') === 'true') document.body.classList.add('dark-mode');
         
         const hoy = new Date().toLocaleDateString('es-MX');
         let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
-        let tieneFondoHoy = datos.some(d => d.fecha === hoy && d.desc === "FONDO INICIAL");
+        let fondoExistente = datos.find(d => d.fecha === hoy && d.desc === "FONDO INICIAL");
 
-        if (!tieneFondoHoy) {
+        if (!fondoExistente) {
             let inicio = prompt("¿Con cuánto de fondo inicias?", "0");
             let montoInicio = parseFloat(inicio);
-            if (!isNaN(montoInicio)) {
-                guardarMov("FONDO INICIAL", montoInicio);
-            }
+            if (isNaN(montoInicio)) montoInicio = 0;
+            guardarMov("FONDO INICIAL", montoInicio);
+            fondoInicialHoy = montoInicio;
+        } else {
+            fondoInicialHoy = fondoExistente.cantidad;
         }
+        
+        document.getElementById('fondo-inicio-html').innerText = `Iniciaste con: $${fondoInicialHoy.toFixed(2)}`;
         cargarMemoria();
     };
 
     function irAWhats() {
-        window.location.href = "https://api.whatsapp.com/send?text=";
+        // Enlace optimizado para abrir la App directamente sin errores de chat
+        window.location.href = "whatsapp://app";
     }
 
     function dictarGPS() {
@@ -178,15 +185,12 @@
     function cargarMemoria() {
         let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
         const hoy = new Date().toLocaleDateString('es-MX');
-        let sumaTotal = 0; 
-        let gananciasHoy = 0; 
-        contadorPedidos = 0;
+        let sumaTotal = 0, gananciasHoy = 0; contadorPedidos = 0;
         const logHtml = document.getElementById('log-hoy');
         logHtml.innerHTML = "";
         
         datos.filter(d => d.fecha === hoy).forEach(d => {
             sumaTotal += d.cantidad;
-            // Solo sumamos a ganancias lo que sea Pedido o Propina
             if (d.desc.includes("Ped #") || d.desc === "Propina") {
                 gananciasHoy += d.cantidad;
                 if (d.desc.includes("Ped #")) contadorPedidos++;
@@ -202,10 +206,7 @@
     }
 
     function actualizarUI(gananciasHoy) {
-        // Muestra todo el dinero que traes (Fondo + Pedidos - Gastos)
         document.getElementById('total-pantalla').innerText = "$" + movimientosTotal.toFixed(2);
-        
-        // La barra solo usa ganancias (Pedidos + Propinas)
         let porcentaje = (gananciasHoy / metaDiaria) * 100;
         document.getElementById('barra').style.width = Math.min(porcentaje, 100) + "%";
         document.getElementById('txt-meta').innerText = `Ganancia: $${gananciasHoy.toFixed(2)}`;
@@ -227,7 +228,7 @@
     }
 
     function limpiarHoy() {
-        if (confirm("¿Reiniciar turno? Esto borrará el fondo y los pedidos de hoy.")) {
+        if (confirm("¿Reiniciar turno?")) {
             const hoy = new Date().toLocaleDateString('es-MX');
             let datos = JSON.parse(localStorage.getItem('foodlink_datos')) || [];
             localStorage.setItem('foodlink_datos', JSON.stringify(datos.filter(d => d.fecha !== hoy)));
